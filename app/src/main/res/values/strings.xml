@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">IMCc</string>
+    <string name="please_enter">Welcome, please enter your height and weight</string>
+    <string name="underweight">Your situation is underweight</string>
+    <string name="optimal">Your weight situation is optimal</string>
+    <string name="overweight">Your situation is overweight</string>
+    <string name="obesity">Your situation is obesity</string>
+    <string name="imc_is">Your IMC is</string>
+</resources>
