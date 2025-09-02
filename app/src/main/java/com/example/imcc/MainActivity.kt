@@ -198,6 +198,32 @@ fun IMCCalculator(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            if (result.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Your BMI is", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = result,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = status, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             OutlinedTextField(
                 value = height,
                 onValueChange = { height = it },
@@ -253,32 +279,7 @@ fun IMCCalculator(
                 Text("Calculate BMI", style = MaterialTheme.typography.bodyLarge)
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            if (result.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Your BMI is", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            text = result,
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = status, style = MaterialTheme.typography.bodyLarge)
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.weight(1f)) // Espacio para centrar
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
