@@ -83,7 +83,6 @@ fun BMIApp(
         currentScreen = if (name == null) Screen.NameInput else Screen.Calculator
     }
 
-
     LaunchedEffect(userPreferences.userNameFlow) {
         userPreferences.userNameFlow.collect { name ->
             if (userName != name) {
@@ -94,7 +93,6 @@ fun BMIApp(
             }
         }
     }
-
 
     Scaffold { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
