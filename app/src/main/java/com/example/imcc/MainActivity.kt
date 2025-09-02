@@ -180,7 +180,7 @@ fun IMCCalculator(
             Spacer(modifier = Modifier.weight(0.5f))
 
             Text(
-                text = "Hello $name!",
+                text = "¡Hello, $name!",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary
             )
