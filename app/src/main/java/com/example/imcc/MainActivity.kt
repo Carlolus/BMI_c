@@ -8,8 +8,8 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons // Importado
-import androidx.compose.material.icons.filled.List // Importado
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -17,6 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,8 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var userPreferences: UserPreferences
     private lateinit var appDatabase: AppDatabase
+
+
 
     private val historyViewModel: HistoryViewModel by viewModels {
         ViewModelFactory(AppDatabase.getDatabase(applicationContext).bmiDao())
@@ -136,7 +140,7 @@ fun SplashScreenContent() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "BMI Calculator",
+            text = stringResource(R.string.splash_title),
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -150,6 +154,7 @@ fun IMCCalculator(
     bmiDao: BmiDao,
     onNavigateToHistory: () -> Unit
 ) {
+    val context = LocalContext.current
     var height by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var result by remember { mutableStateOf("") }
@@ -171,20 +176,15 @@ fun IMCCalculator(
                 horizontalArrangement = Arrangement.End
             ) {
                 IconButton(onClick = onNavigateToHistory) {
-                    Icon(Icons.Filled.List, contentDescription = "View BMI History")
+                    Icon(Icons.Filled.List, contentDescription = stringResource(R.string.history_title))
                 }
             }
 
             Spacer(modifier = Modifier.weight(0.5f))
 
             Text(
-                text = "¡Hello, $name!",
+                text = stringResource(R.string.greeting, name),
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "BMI Calculator",
-                style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -208,7 +208,7 @@ fun IMCCalculator(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Your BMI is", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.bmi_is), style = MaterialTheme.typography.titleMedium)
                         Text(
                             text = result,
                             style = MaterialTheme.typography.headlineMedium,
@@ -225,7 +225,7 @@ fun IMCCalculator(
             OutlinedTextField(
                 value = height,
                 onValueChange = { height = it },
-                label = { Text("Height (cm)") },
+                label = { Text(stringResource(R.string.label_height)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -235,7 +235,7 @@ fun IMCCalculator(
             OutlinedTextField(
                 value = weight,
                 onValueChange = { weight = it },
-                label = { Text("Weight (kg)") },
+                label = { Text(stringResource(R.string.label_weight)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -250,10 +250,10 @@ fun IMCCalculator(
                         val imc = w / ((h / 100) * (h / 100))
                         result = "%.2f".format(imc)
                         status = when {
-                            imc < 18.5 -> "Underweight"
-                            imc < 24.9 -> "Normal weight"
-                            imc < 29.9 -> "Overweight"
-                            else -> "Obesity"
+                            imc < 18.5 -> context.getString(R.string.underweight)
+                            imc < 24.9 -> context.getString(R.string.normal_weight)
+                            imc < 29.9 -> context.getString(R.string.overweight)
+                            else -> context.getString(R.string.obesity)
                         }
                         scope.launch {
                             val bmiHistoryEntry = BmiHistory(
@@ -266,7 +266,7 @@ fun IMCCalculator(
                         }
                     } else {
                         result = ""
-                        status = "Invalid input"
+                        status = context.getString(R.string.invalid_input)
                     }
                 },
                 modifier = Modifier
@@ -274,7 +274,7 @@ fun IMCCalculator(
                     .height(50.dp),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Text("Calculate BMI", style = MaterialTheme.typography.bodyLarge)
+                Text(context.getString(R.string.button_calculate), style = MaterialTheme.typography.bodyLarge)
             }
 
             Spacer(modifier = Modifier.weight(1f))

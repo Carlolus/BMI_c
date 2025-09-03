@@ -1,9 +1,36 @@
 <resources>
-    <string name="app_name">IMCc</string>
-    <string name="please_enter">Welcome, please enter your height and weight</string>
-    <string name="underweight">Your situation is underweight</string>
-    <string name="optimal">Your weight situation is optimal</string>
-    <string name="overweight">Your situation is overweight</string>
-    <string name="obesity">Your situation is obesity</string>
-    <string name="imc_is">Your IMC is</string>
+
+    <!-- Name screen -->
+    <string name="app_name">BMI Calculator</string>
+    <string name="welcome">Welcome</string>
+    <string name="please_enter_your_name">Please enter your name:</string>
+    <string name="label_name">Name</string>">
+    <string name="button_continue">Continue</string>
+
+    <!-- Splash screen -->
+    <string name="splash_title">BMI Calculator</string>">
+
+    <!-- BMI calculator screen -->
+    <string name="greeting">¡Hello, %1$s!</string>
+    <string name="enter_height_weight">Enter your height and weight</string>
+    <string name="bmi_is">Your BMI is</string>
+    <string name="underweight">Underweight</string>
+    <string name="normal_weight">Normal weight</string>
+    <string name="overweight">Overweight</string>
+    <string name="obesity">Obesity</string>
+    <string name="invalid_input">Invalid input</string>">
+    <string name="button_calculate">Calculate BMI</string>
+    <string name="label_weight">Weight (kg)</string>">
+    <string name="label_height">Height (cm)</string>
+
+    <!-- History Screen -->
+    <string name="history_title">BMI History</string>
+    <string name="no_history">No history yet.</string>
+    <string name="button_back">Back</string>
+    <string name="bmi_will_appear_here">Your BMI calculations will appear here.</string>">
+    <string name="label_bmi">BMI: %1$.2f</string>
+    <string name="history_weight">Weight: %1$.1f kg</string>
+    <string name="history_height">Height: %1$.2f m</string>
+
+
 </resources>

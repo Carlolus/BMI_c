@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack // Cambiado a automirrored
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +28,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.imcc.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,12 +49,12 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("BMI History") },
+                title = { Text(stringResource(R.string.history_title), fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack, // Cambiado
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.history_title)
                         )
                     }
                 },
@@ -72,8 +74,8 @@ fun HistoryScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("No history yet.", style = MaterialTheme.typography.headlineSmall)
-                Text("Your BMI calculations will appear here.")
+                Text(stringResource(R.string.no_history), style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.bmi_will_appear_here))
             }
         } else {
             LazyColumn(
@@ -113,19 +115,19 @@ fun HistoryItemCard(item: BmiHistory) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "BMI: %.2f".format(item.result),
+                    text = stringResource(R.string.label_bmi, item.result),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+
                 Row {
                     Text(
-                        text = "Weight: %.1f kg".format(item.weight),
+                        text = stringResource(R.string.history_weight, item.weight),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Height: %.2f m".format(item.height),
+                        text = stringResource(R.string.history_height, item.height),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

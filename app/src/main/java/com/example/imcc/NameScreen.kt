@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 
@@ -24,13 +25,13 @@ fun NameScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(24.dp)
         ) {
-            Text(text = "Welcome", style = MaterialTheme.typography.headlineMedium)
-            Text(text = "Please enter your name:")
+            Text(text = stringResource(R.string.welcome), style = MaterialTheme.typography.headlineMedium)
+            Text(text = stringResource(R.string.please_enter_your_name), style = MaterialTheme.typography.bodyMedium)
 
             TextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Name") },
+                label = { Text(stringResource(R.string.label_name)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -39,7 +40,7 @@ fun NameScreen(
                 enabled = text.text.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Continue")
+                Text(stringResource(R.string.button_continue))
             }
         }
     }
