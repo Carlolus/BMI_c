@@ -133,11 +133,27 @@ fun BMIApp(
 
     LaunchedEffect(Unit) {
         delay(2000)
-        // Verificar si hay un usuario autenticado
-        val currentUser = currentUserFlow.value
-        if (currentUser != null) {
-            userName = currentUser.name
-            currentScreen = Screen.Calculator
+        // Verificar si hay un usuario autenticado en Firebase
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        if (firebaseUser != null) {
+            // Si hay usuario en Firebase, verificar si está en la base de datos local
+            val existingUser = bmiDao.getUser(firebaseUser.uid).first()
+            if (existingUser != null) {
+                currentUserFlow.value = existingUser
+                userName = existingUser.name
+                currentScreen = Screen.Calculator
+            } else {
+                // Si no está en la BD local, crearlo
+                val userEntity = com.example.imcc.data.User(
+                    uid = firebaseUser.uid,
+                    name = firebaseUser.displayName ?: "Usuario",
+                    email = firebaseUser.email
+                )
+                bmiDao.saveUser(userEntity)
+                currentUserFlow.value = userEntity
+                userName = userEntity.name
+                currentScreen = Screen.Calculator
+            }
         } else {
             currentScreen = Screen.NameInput
         }
