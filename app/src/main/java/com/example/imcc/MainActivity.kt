@@ -39,6 +39,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 enum class Screen {
@@ -53,16 +55,26 @@ class MainActivity : ComponentActivity() {
     private lateinit var userPreferences: UserPreferences
     private lateinit var appDatabase: AppDatabase
     private lateinit var googleAuthClient: GoogleAuthClient
-
     private val historyViewModel: HistoryViewModel by viewModels {
         ViewModelFactory(AppDatabase.getDatabase(applicationContext).bmiDao())
     }
+
+    // Flow para notificar el nombre del usuario y el cambio de pantalla
+    private val userNameFlow = MutableStateFlow<String?>(null)
 
     private val signInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         lifecycleScope.launch {
             val success = googleAuthClient.handleSignInResult(result.data)
             if (success) {
                 println("Sign-in successful")
+                val user = FirebaseAuth.getInstance().currentUser
+                user?.displayName?.let { name ->
+                    if (name.isNotBlank()) {
+                        userPreferences.saveUserName(name)
+                        appDatabase.bmiDao().saveUser(User(name = name))
+                        userNameFlow.value = name // Notifica el nombre para cambiar la pantalla
+                    }
+                }
             } else {
                 println("Sign-in failed")
             }
@@ -86,7 +98,8 @@ class MainActivity : ComponentActivity() {
                     googleAuthClient = googleAuthClient,
                     onSignIn = { intent ->
                         signInLauncher.launch(intent)
-                    }
+                    },
+                    userNameFlowFromActivity = userNameFlow // Pasa el flow
                 )
             }
         }
@@ -100,7 +113,8 @@ fun BMIApp(
     bmiDao: BmiDao,
     historyViewModel: HistoryViewModel,
     googleAuthClient: GoogleAuthClient,
-    onSignIn: (Intent) -> Unit
+    onSignIn: (Intent) -> Unit,
+    userNameFlowFromActivity: MutableStateFlow<String?> // Nuevo parámetro
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Splash) }
     var userName by remember { mutableStateOf<String?>(null) }
@@ -124,16 +138,30 @@ fun BMIApp(
         }
     }
 
+    // Escucha el nombre del usuario desde el inicio de sesión con Google
+    LaunchedEffect(userNameFlowFromActivity) {
+        userNameFlowFromActivity.collect { name ->
+            if (name != null && currentScreen == Screen.NameInput) {
+                userName = name
+                currentScreen = Screen.Calculator
+            }
+        }
+    }
+
     Scaffold { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (currentScreen) {
                 Screen.Splash -> SplashScreenContent()
-                Screen.NameInput -> NameScreen { name ->
-                    scope.launch {
-                        userPreferences.saveUserName(name)
-                        bmiDao.saveUser(User(name = name))
-                    }
-                }
+                Screen.NameInput -> NameScreen(
+                    onNameSaved = { name ->
+                        scope.launch {
+                            userPreferences.saveUserName(name)
+                            bmiDao.saveUser(User(name = name))
+                        }
+                    },
+                    googleAuthClient = googleAuthClient,
+                    onSignIn = onSignIn
+                )
                 Screen.Calculator -> {
                     if (userName == null) {
                         currentScreen = Screen.NameInput
@@ -310,25 +338,6 @@ fun IMCCalculator(
             }
 
             Spacer(modifier = Modifier.weight(1f))
-
-            OutlinedButton(onClick = {
-                if (!isSignedIn) {
-                    onSignIn(googleAuthClient.getSignInIntent())
-                } else {
-                    scope.launch {
-                        googleAuthClient.signOut()
-                        isSignedIn = false
-                    }
-                }
-            }) {
-                Text(
-                    text = if (isSignedIn) "Sign Out" else "Sign In With Google",
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(
-                        horizontal = 24.dp, vertical = 4.dp
-                    )
-                )
-            }
         }
     }
 }
