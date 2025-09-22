@@ -1,6 +1,7 @@
 package com.example.imcc
 
 import UserPreferences
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +37,9 @@ import com.example.imcc.ui.theme.IMCcTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
+import androidx.activity.result.contract.ActivityResultContracts
+
 
 enum class Screen {
     Splash,
@@ -47,11 +52,21 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var userPreferences: UserPreferences
     private lateinit var appDatabase: AppDatabase
-
-
+    private lateinit var googleAuthClient: GoogleAuthClient
 
     private val historyViewModel: HistoryViewModel by viewModels {
         ViewModelFactory(AppDatabase.getDatabase(applicationContext).bmiDao())
+    }
+
+    private val signInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        lifecycleScope.launch {
+            val success = googleAuthClient.handleSignInResult(result.data)
+            if (success) {
+                println("Sign-in successful")
+            } else {
+                println("Sign-in failed")
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,10 +75,19 @@ class MainActivity : ComponentActivity() {
 
         userPreferences = UserPreferences(applicationContext)
         appDatabase = AppDatabase.getDatabase(applicationContext)
+        googleAuthClient = GoogleAuthClient(this)
 
         setContent {
             IMCcTheme {
-                BMIApp(userPreferences, appDatabase.bmiDao(), historyViewModel)
+                BMIApp(
+                    userPreferences = userPreferences,
+                    bmiDao = appDatabase.bmiDao(),
+                    historyViewModel = historyViewModel,
+                    googleAuthClient = googleAuthClient,
+                    onSignIn = { intent ->
+                        signInLauncher.launch(intent)
+                    }
+                )
             }
         }
     }
@@ -74,7 +98,9 @@ class MainActivity : ComponentActivity() {
 fun BMIApp(
     userPreferences: UserPreferences,
     bmiDao: BmiDao,
-    historyViewModel: HistoryViewModel
+    historyViewModel: HistoryViewModel,
+    googleAuthClient: GoogleAuthClient,
+    onSignIn: (Intent) -> Unit
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Splash) }
     var userName by remember { mutableStateOf<String?>(null) }
@@ -106,18 +132,18 @@ fun BMIApp(
                     scope.launch {
                         userPreferences.saveUserName(name)
                         bmiDao.saveUser(User(name = name))
-
                     }
                 }
                 Screen.Calculator -> {
-
                     if (userName == null) {
                         currentScreen = Screen.NameInput
                     } else {
                         IMCCalculator(
                             name = userName!!,
                             bmiDao = bmiDao,
-                            onNavigateToHistory = { currentScreen = Screen.History }
+                            onNavigateToHistory = { currentScreen = Screen.History },
+                            googleAuthClient = googleAuthClient,
+                            onSignIn = onSignIn
                         )
                     }
                 }
@@ -148,11 +174,14 @@ fun SplashScreenContent() {
     }
 }
 
+
 @Composable
 fun IMCCalculator(
     name: String,
     bmiDao: BmiDao,
-    onNavigateToHistory: () -> Unit
+    onNavigateToHistory: () -> Unit,
+    googleAuthClient: GoogleAuthClient,
+    onSignIn: (Intent) -> Unit // Callback para lanzar el Intent
 ) {
     val context = LocalContext.current
     var height by remember { mutableStateOf("") }
@@ -160,6 +189,9 @@ fun IMCCalculator(
     var result by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+    var isSignedIn by rememberSaveable {
+        mutableStateOf(googleAuthClient.isSignedIn())
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -278,6 +310,25 @@ fun IMCCalculator(
             }
 
             Spacer(modifier = Modifier.weight(1f))
+
+            OutlinedButton(onClick = {
+                if (!isSignedIn) {
+                    onSignIn(googleAuthClient.getSignInIntent())
+                } else {
+                    scope.launch {
+                        googleAuthClient.signOut()
+                        isSignedIn = false
+                    }
+                }
+            }) {
+                Text(
+                    text = if (isSignedIn) "Sign Out" else "Sign In With Google",
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(
+                        horizontal = 24.dp, vertical = 4.dp
+                    )
+                )
+            }
         }
     }
 }
