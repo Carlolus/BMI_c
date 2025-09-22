@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "649469196072",
+    "project_id": "imcc-38820",
+    "storage_bucket": "imcc-38820.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:649469196072:android:c670248fd79e7a5a06021d",
+        "android_client_info": {
+          "package_name": "com.example.imcc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "649469196072-ahvai34lv5aqia5kjgkq33u57mteuo50.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.imcc",
+            "certificate_hash": "5bbe472b7570358ed47a3f047994ca563a6e3cad"
+          }
+        },
+        {
+          "client_id": "649469196072-ikor9pb8k79o2sc58r7n446dpkqrgqtq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJty12xcjvu3OYmYinpFhuVvOqUmKiWqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "649469196072-ikor9pb8k79o2sc58r7n446dpkqrgqtq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
