@@ -7,7 +7,7 @@ import android.content.Context
 
 @Database(
     entities = [User::class, BmiHistory::class],
-    version = 1,
+    version = 2, // Incrementado para el cambio de esquema
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

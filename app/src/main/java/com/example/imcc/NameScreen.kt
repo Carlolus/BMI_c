@@ -19,7 +19,6 @@ fun NameScreen(
     googleAuthClient: GoogleAuthClient,
     onSignIn: (Intent) -> Unit
 ) {
-    var text by remember { mutableStateOf(TextFieldValue("")) }
     var isSignedIn by remember { mutableStateOf(googleAuthClient.isSignedIn()) }
     val scope = rememberCoroutineScope()
 
@@ -28,7 +27,7 @@ fun NameScreen(
         if (isSignedIn) {
             val user = FirebaseAuth.getInstance().currentUser
             user?.displayName?.let { name ->
-                text = TextFieldValue(name)
+                onNameSaved(name)
             }
         }
     }
@@ -47,26 +46,11 @@ fun NameScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
             Text(
-                text = stringResource(R.string.please_enter_your_name),
+                text = stringResource(R.string.please_sign_in),
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            TextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text(stringResource(R.string.label_name)) },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-                onClick = { if (text.text.isNotBlank()) onNameSaved(text.text) },
-                enabled = text.text.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.button_continue))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedButton(
                 onClick = {
@@ -76,14 +60,13 @@ fun NameScreen(
                         scope.launch {
                             googleAuthClient.signOut()
                             isSignedIn = false
-                            text = TextFieldValue("") // Limpia el campo al cerrar sesión
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = if (isSignedIn) "Sign Out" else "Sign In With Google",
+                    text = if (isSignedIn) stringResource(R.string.button_sign_out) else stringResource(R.string.button_sign_in),
                     fontSize = 16.sp,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
                 )

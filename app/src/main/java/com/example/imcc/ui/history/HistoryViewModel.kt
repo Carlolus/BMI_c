@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
-class HistoryViewModel(private val bmiDao: BmiDao) : ViewModel() {
+class HistoryViewModel(private val bmiDao: BmiDao, private val userId: String) : ViewModel() {
     val historyUiState: StateFlow<List<BmiHistory>> =
-        bmiDao.getHistory(userId = 0)
+        bmiDao.getHistory(userId = userId)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000L),

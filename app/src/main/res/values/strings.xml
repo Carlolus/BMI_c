@@ -3,9 +3,9 @@
     <!-- Name screen -->
     <string name="app_name">BMI Calculator</string>
     <string name="welcome">Welcome</string>
-    <string name="please_enter_your_name">Please enter your name:</string>
-    <string name="label_name">Name</string>">
-    <string name="button_continue">Continue</string>
+    <string name="please_sign_in">Please sign in with Google to continue</string>
+    <string name="button_sign_in">Sign In With Google</string>
+    <string name="button_sign_out">Sign Out</string>
 
     <!-- Splash screen -->
     <string name="splash_title">BMI Calculator</string>">

@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "users")
 data class User(
-    @PrimaryKey val id: Int = 0,
-    val name: String
+    @PrimaryKey val uid: String, // UUID de Google
+    val name: String,
+    val email: String? = null
 )

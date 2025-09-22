@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "bmi_history")
 data class BmiHistory(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val userId: Int,
+    val userId: String, // Cambiado a String para UUID de Google
     val result: Double,
     val weight: Double,
     val height: Double,

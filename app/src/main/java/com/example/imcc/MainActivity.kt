@@ -55,8 +55,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var userPreferences: UserPreferences
     private lateinit var appDatabase: AppDatabase
     private lateinit var googleAuthClient: GoogleAuthClient
+    private val currentUserFlow = MutableStateFlow<com.example.imcc.data.User?>(null)
     private val historyViewModel: HistoryViewModel by viewModels {
-        ViewModelFactory(AppDatabase.getDatabase(applicationContext).bmiDao())
+        ViewModelFactory(AppDatabase.getDatabase(applicationContext).bmiDao(), "")
     }
 
     // Flow para notificar el nombre del usuario y el cambio de pantalla
@@ -67,13 +68,21 @@ class MainActivity : ComponentActivity() {
             val success = googleAuthClient.handleSignInResult(result.data)
             if (success) {
                 println("Sign-in successful")
-                val user = FirebaseAuth.getInstance().currentUser
-                user?.displayName?.let { name ->
-                    if (name.isNotBlank()) {
-                        userPreferences.saveUserName(name)
-                        appDatabase.bmiDao().saveUser(User(name = name))
-                        userNameFlow.value = name // Notifica el nombre para cambiar la pantalla
-                    }
+                val firebaseUser = FirebaseAuth.getInstance().currentUser
+                firebaseUser?.let { user ->
+                    val uid = user.uid
+                    val name = user.displayName ?: "Usuario"
+                    val email = user.email
+                    
+                    val userEntity = com.example.imcc.data.User(
+                        uid = uid,
+                        name = name,
+                        email = email
+                    )
+                    
+                    appDatabase.bmiDao().saveUser(userEntity)
+                    currentUserFlow.value = userEntity
+                    userNameFlow.value = name // Notifica el nombre para cambiar la pantalla
                 }
             } else {
                 println("Sign-in failed")
@@ -99,7 +108,8 @@ class MainActivity : ComponentActivity() {
                     onSignIn = { intent ->
                         signInLauncher.launch(intent)
                     },
-                    userNameFlowFromActivity = userNameFlow // Pasa el flow
+                    userNameFlowFromActivity = userNameFlow, // Pasa el flow
+                    currentUserFlow = currentUserFlow
                 )
             }
         }
@@ -114,7 +124,8 @@ fun BMIApp(
     historyViewModel: HistoryViewModel,
     googleAuthClient: GoogleAuthClient,
     onSignIn: (Intent) -> Unit,
-    userNameFlowFromActivity: MutableStateFlow<String?> // Nuevo parámetro
+    userNameFlowFromActivity: MutableStateFlow<String?>, // Nuevo parámetro
+    currentUserFlow: MutableStateFlow<com.example.imcc.data.User?>
 ) {
     var currentScreen by remember { mutableStateOf(Screen.Splash) }
     var userName by remember { mutableStateOf<String?>(null) }
@@ -122,9 +133,14 @@ fun BMIApp(
 
     LaunchedEffect(Unit) {
         delay(2000)
-        val name = userPreferences.userNameFlow.first()
-        userName = name
-        currentScreen = if (name == null) Screen.NameInput else Screen.Calculator
+        // Verificar si hay un usuario autenticado
+        val currentUser = currentUserFlow.value
+        if (currentUser != null) {
+            userName = currentUser.name
+            currentScreen = Screen.Calculator
+        } else {
+            currentScreen = Screen.NameInput
+        }
     }
 
     LaunchedEffect(userPreferences.userNameFlow) {
@@ -148,6 +164,16 @@ fun BMIApp(
         }
     }
 
+    // Escucha cambios en el usuario actual
+    LaunchedEffect(currentUserFlow) {
+        currentUserFlow.collect { user ->
+            if (user == null && currentScreen != Screen.NameInput) {
+                currentScreen = Screen.NameInput
+                userName = null
+            }
+        }
+    }
+
     Scaffold { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (currentScreen) {
@@ -156,7 +182,7 @@ fun BMIApp(
                     onNameSaved = { name ->
                         scope.launch {
                             userPreferences.saveUserName(name)
-                            bmiDao.saveUser(User(name = name))
+                            // El usuario se guarda automáticamente en el signInLauncher
                         }
                     },
                     googleAuthClient = googleAuthClient,
@@ -171,14 +197,27 @@ fun BMIApp(
                             bmiDao = bmiDao,
                             onNavigateToHistory = { currentScreen = Screen.History },
                             googleAuthClient = googleAuthClient,
-                            onSignIn = onSignIn
+                            onSignIn = onSignIn,
+                            currentUserFlow = currentUserFlow
                         )
                     }
                 }
-                Screen.History -> HistoryScreen(
-                    viewModel = historyViewModel,
-                    onNavigateBack = { currentScreen = Screen.Calculator }
-                )
+                Screen.History -> {
+                    val currentUser by currentUserFlow.collectAsState()
+                    currentUser?.let { user ->
+                        val historyViewModelForUser = HistoryViewModel(
+                            bmiDao = bmiDao,
+                            userId = user.uid
+                        )
+                        HistoryScreen(
+                            viewModel = historyViewModelForUser,
+                            onNavigateBack = { currentScreen = Screen.Calculator }
+                        )
+                    } ?: run {
+                        // Si no hay usuario, volver a la pantalla principal
+                        currentScreen = Screen.Calculator
+                    }
+                }
             }
         }
     }
@@ -209,7 +248,8 @@ fun IMCCalculator(
     bmiDao: BmiDao,
     onNavigateToHistory: () -> Unit,
     googleAuthClient: GoogleAuthClient,
-    onSignIn: (Intent) -> Unit // Callback para lanzar el Intent
+    onSignIn: (Intent) -> Unit, // Callback para lanzar el Intent
+    currentUserFlow: MutableStateFlow<com.example.imcc.data.User?>
 ) {
     val context = LocalContext.current
     var height by remember { mutableStateOf("") }
@@ -233,8 +273,21 @@ fun IMCCalculator(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Botón de Sign Out
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            googleAuthClient.signOut()
+                            currentUserFlow.value = null
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.button_sign_out), fontSize = 12.sp)
+                }
+                
+                // Botón de Historial
                 IconButton(onClick = onNavigateToHistory) {
                     Icon(Icons.Filled.List, contentDescription = stringResource(R.string.history_title))
                 }
@@ -316,13 +369,16 @@ fun IMCCalculator(
                             else -> context.getString(R.string.obesity)
                         }
                         scope.launch {
-                            val bmiHistoryEntry = BmiHistory(
-                                userId = 0,
-                                result = imc,
-                                weight = w,
-                                height = h / 100
-                            )
-                            bmiDao.insertHistory(bmiHistoryEntry)
+                            val currentUser = currentUserFlow.value
+                            if (currentUser != null) {
+                                val bmiHistoryEntry = BmiHistory(
+                                    userId = currentUser.uid,
+                                    result = imc,
+                                    weight = w,
+                                    height = h / 100
+                                )
+                                bmiDao.insertHistory(bmiHistoryEntry)
+                            }
                         }
                     } else {
                         result = ""

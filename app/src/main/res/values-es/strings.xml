@@ -2,9 +2,9 @@
     <!-- Pantalla de nombre -->
     <string name="app_name">Calculadora de IMC</string>
     <string name="welcome">Bienvenido</string>
-    <string name="please_enter_your_name">Por favor, ingresa tu nombre:</string>
-    <string name="label_name">Nombre</string>
-    <string name="button_continue">Continuar</string>
+    <string name="please_sign_in">Por favor, inicia sesión con Google para continuar</string>
+    <string name="button_sign_in">Iniciar sesión con Google</string>
+    <string name="button_sign_out">Cerrar sesión</string>
 
     <!-- Pantalla de splash -->
     <string name="splash_title">Calculadora de IMC</string>
